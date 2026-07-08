@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-hello:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Update hello.txt
+        run: |
+          printf 'Updated by %s on %s\n' "${GITHUB_WORKFLOW}" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> hello.txt
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- hello.txt; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git add hello.txt
+          git commit -m "Update hello.txt from workflow"
+          git push
